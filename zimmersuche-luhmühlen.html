@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unterkunftssuche Luhmühlen – AZL</title>
+<style>
+  :root {
+    --grün: #1a6b3c;
+    --grün-hell: #e8f5ee;
+    --grün-rand: #9fd4b4;
+    --gold: #b07d2a;
+    --gold-hell: #fdf3e0;
+    --gold-rand: #e6c87a;
+    --rot: #b03030;
+    --rot-hell: #fde8e8;
+    --grau: #4a4a4a;
+    --grau-hell: #f5f5f3;
+    --rand: #ddd;
+    --lila-hell: #eeebff;
+    --lila: #5b49c4;
+    --text: #1a1a1a;
+    --muted: #666;
+    --bg: #fff;
+    --radius: 10px;
+    --shadow: 0 2px 8px rgba(0,0,0,.07);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f4f4f1; color: var(--text); }
+  
+  .page { max-width: 1100px; margin: 0 auto; padding: 2rem 1rem; }
+  
+  .header { margin-bottom: 1.5rem; }
+  .header h1 { font-size: 1.6rem; font-weight: 600; color: var(--grün); display: flex; align-items: center; gap: .5rem; }
+  .header p { color: var(--muted); font-size: .9rem; margin-top: .3rem; }
+  
+  /* Filter */
+  .filter-box { background: var(--bg); border: 1px solid var(--rand); border-radius: var(--radius); padding: 1.2rem 1.4rem; margin-bottom: 1.2rem; box-shadow: var(--shadow); }
+  .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 1rem; }
+  .fg label { display: block; font-size: .78rem; font-weight: 600; color: var(--muted); margin-bottom: .3rem; text-transform: uppercase; letter-spacing: .04em; }
+  .fg select, .fg input[type=range] { width: 100%; }
+  select { appearance: none; background: var(--grau-hell) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E") no-repeat right 10px center; border: 1px solid var(--rand); border-radius: 6px; padding: .45rem .9rem .45rem .6rem; font-size: .88rem; color: var(--text); cursor: pointer; }
+  select:focus { outline: 2px solid var(--grün); border-color: var(--grün); }
+  .price-row { display: flex; align-items: center; gap: .5rem; }
+  .price-row input { flex: 1; accent-color: var(--grün); }
+  .price-val { font-size: .88rem; font-weight: 600; color: var(--text); min-width: 62px; }
+  
+  /* Tags */
+  .tags { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: 1.2rem; }
+  .tag { font-size: .8rem; padding: .3rem .75rem; border-radius: 99px; border: 1px solid var(--rand); color: var(--muted); cursor: pointer; background: var(--bg); transition: all .15s; }
+  .tag:hover { border-color: var(--grün); color: var(--grün); }
+  .tag.on { background: var(--grün); color: #fff; border-color: var(--grün); }
+  
+  /* Meta */
+  .meta { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+  .meta-count { font-size: .88rem; color: var(--muted); }
+  .meta-count b { color: var(--text); }
+  .sort-row { display: flex; align-items: center; gap: .5rem; font-size: .88rem; color: var(--muted); }
+  .sort-row select { width: auto; }
+  
+  /* Karten-Grid */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+  
+  .card { background: var(--bg); border: 1px solid var(--rand); border-radius: var(--radius); padding: 1rem 1.1rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: .5rem; transition: box-shadow .15s, border-color .15s; }
+  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); border-color: #bbb; }
+  
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; }
+  .card-name { font-size: .95rem; font-weight: 600; color: var(--text); line-height: 1.3; }
+  .badge { font-size: .7rem; padding: .2rem .55rem; border-radius: 99px; font-weight: 600; white-space: nowrap; flex-shrink: 0; }
+  .badge-Hotel { background: #dceefb; color: #1560a0; }
+  .badge-Pension { background: var(--gold-hell); color: var(--gold); }
+  .badge-Privat { background: var(--grün-hell); color: var(--grün); }
+  .badge-Fewo { background: var(--lila-hell); color: var(--lila); }
+  
+  .card-addr { font-size: .8rem; color: var(--muted); display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; }
+  .dist-badge { font-size: .7rem; padding: .15rem .5rem; border-radius: 99px; border: 1px solid; font-weight: 600; }
+  .dist-nah { background: var(--grün-hell); color: var(--grün); border-color: var(--grün-rand); }
+  .dist-mittel { background: var(--gold-hell); color: var(--gold); border-color: var(--gold-rand); }
+  .dist-weit { background: var(--rot-hell); color: var(--rot); border-color: #e9a0a0; }
+  
+  .card-facts { display: flex; flex-wrap: wrap; gap: .35rem; }
+  .fact { font-size: .75rem; color: var(--muted); display: flex; align-items: center; gap: .2rem; background: var(--grau-hell); padding: .2rem .5rem; border-radius: 99px; }
+  
+  .card-price { font-size: 1.2rem; font-weight: 700; color: var(--text); }
+  .card-price span { font-size: .8rem; font-weight: 400; color: var(--muted); }
+  
+  .card-notes { font-size: .78rem; color: var(--muted); border-top: 1px solid #eee; padding-top: .5rem; line-height: 1.6; }
+  
+  .card-contact { display: flex; flex-wrap: wrap; gap: .5rem; font-size: .78rem; color: var(--muted); }
+  .card-contact a { color: var(--grün); text-decoration: none; }
+  .card-contact a:hover { text-decoration: underline; }
+  
+  .empty { text-align: center; padding: 3rem 1rem; color: var(--muted); font-size: .95rem; grid-column: 1/-1; }
+  
+  /* Icons (Unicode) */
+  .ico { font-style: normal; }
+  
+  /* Responsive */
+  @media (max-width: 600px) {
+    .filter-grid { grid-template-columns: 1fr 1fr; }
+    .cards { grid-template-columns: 1fr; }
+  }
+  
+  /* Einbettungs-Hinweis */
+  .embed-info { background: var(--grau-hell); border: 1px solid var(--rand); border-radius: var(--radius); padding: .8rem 1rem; margin-top: 1.5rem; font-size: .8rem; color: var(--muted); }
+  .embed-info code { background: #e8e8e8; padding: .1rem .3rem; border-radius: 4px; font-family: monospace; font-size: .78rem; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <h1>🏇 Unterkunftssuche Luhmühlen</h1>
+    <p>Alle Unterkünfte rund um das Athletik-Zentrum Luhmühlen (AZL) &mdash; Stand: Februar 2025</p>
+  </div>
+
+  <!-- Filter -->
+  <div class="filter-box">
+    <div class="filter-grid">
+      <div class="fg">
+        <label>Unterkunftsart</label>
+        <select id="fT">
+          <option value="">Alle Arten</option>
+          <option>Hotel</option>
+          <option>Pension</option>
+          <option>Privat</option>
+          <option>Fewo</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Zimmertyp</label>
+        <select id="fR">
+          <option value="">Alle Typen</option>
+          <option value="EZ">Einzelzimmer</option>
+          <option value="DZ">Doppelzimmer</option>
+          <option value="MZ">Fewo / Mehrbett</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Personen (mind.)</label>
+        <select id="fP">
+          <option value="0">Egal</option>
+          <option value="1">1 Person</option>
+          <option value="2">2 Personen</option>
+          <option value="4">4 Personen</option>
+          <option value="6">6 Personen</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Max. Preis / Nacht</label>
+        <div class="price-row">
+          <input type="range" id="fPr" min="18" max="300" value="300" step="5">
+          <span class="price-val" id="prOut">bis 300 €</span>
+        </div>
+      </div>
+      <div class="fg">
+        <label>Entfernung zum AZL</label>
+        <select id="fD">
+          <option value="">Alle Entfernungen</option>
+          <option value="nah">Nah (≤ 2 km)</option>
+          <option value="mittel">Mittel (3–10 km)</option>
+          <option value="weit">Weiter (&gt; 10 km)</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Hunde erlaubt</label>
+        <select id="fDog">
+          <option value="">Egal</option>
+          <option value="ja">Ja</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schnell-Tags -->
+  <div class="tags" id="tagRow">
+    <span class="tag on" data-t="">Alle</span>
+    <span class="tag" data-t="frühstück">🍳 Frühstück</span>
+    <span class="tag" data-t="küche">🍽️ Küche vorhanden</span>
+    <span class="tag" data-t="hund">🐾 Hundefreundlich</span>
+    <span class="tag" data-t="pferd">🐴 Pferdeboxen</span>
+    <span class="tag" data-t="sauna">🧖 Sauna / Wellness</span>
+    <span class="tag" data-t="restaurant">🍴 Restaurant</span>
+  </div>
+
+  <!-- Meta + Sortierung -->
+  <div class="meta">
+    <div class="meta-count">Zeige <b id="cnt">0</b> Unterkünfte</div>
+    <div class="sort-row">
+      Sortieren nach
+      <select id="fS">
+        <option value="preis">Preis (günstigste zuerst)</option>
+        <option value="dist">Entfernung (nächste zuerst)</option>
+        <option value="name">Name A – Z</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Ergebnisse -->
+  <div class="cards" id="cards"></div>
+
+  <div class="embed-info">
+    <strong>Einbinden in Website:</strong> Diese Datei kann direkt per <code>&lt;iframe src="zimmersuche-luhmühlen.html" width="100%" height="900" frameborder="0"&gt;&lt;/iframe&gt;</code> in die AZL-Website eingebettet werden – oder der HTML-Code wird direkt in eine bestehende CMS-Seite eingefügt.
+  </div>
+
+</div>
+
+<script>
+const DATA = [
+  {n:"Pension Rieckmann",a:"Bruchweg 4, 21376 Salzhausen",t:"Pension",dk:1.5,dc:"nah",ep:32,dp:44,p:2,r:["EZ","DZ"],tg:["hund"],tel:"04172/8169",w:"www.hofrieckmann-luhmuehlen.de",no:"EZ 32–51 €, DZ 44–70 €; Mikrowelle, Küche; Hunde auf Anfrage; Stornierungsbedingungen beachten"},
+  {n:"Rüter's Hotel & Restaurant",a:"Hauptstr. 1, 21376 Salzhausen",t:"Hotel",dk:1.2,dc:"nah",ep:77,dp:112,p:2,r:["EZ","DZ","MZ"],tg:["restaurant"],tel:"04172/6610",w:"www.rueters-gasthaus.de",no:"4 EZ (77–91 €) / 14 DZ (112–138 €); Dreibettzimmer verfügbar"},
+  {n:"Ferienhaus Kockenhof",a:"Hauptstr. 12, 21376 Salzhausen",t:"Fewo",dk:1.2,dc:"nah",ep:70,dp:70,p:6,r:["MZ"],tg:["küche"],tel:"04172/283146",w:"",no:"Bis zu 6 Personen, 70–120 €/Nacht; ab 3 Nächten buchbar; Preis nach Personenzahl"},
+  {n:"Christine Baumann-Heuer",a:"Lobker Weg 19, 21376 Salzhausen",t:"Privat",dk:1.5,dc:"nah",ep:40,dp:80,p:2,r:["MZ"],tg:["hund","küche"],tel:"0151-53929161",w:"",no:"Fewo 1–2 Pers., Terrasse, 1 Bett; Gästebett im WZ möglich; Box 20 €/Tag; Endreinigung 30 €"},
+  {n:"Kleines Häuschen Luhmühlen",a:"Alte Dorfstr. 3, 21376 Salzhausen",t:"Fewo",dk:1.0,dc:"nah",ep:60,dp:60,p:2,r:["MZ"],tg:["hund","küche"],tel:"04172-969875",w:"",no:"1–2 Pers.; Kaffeemaschine, Bettwäsche inkl.; Hunde gestattet (10 €/Nacht); 3. Pers. +20 €; Endreinigung 30 €"},
+  {n:"HannaHs (Heike David)",a:"Röndahler Weg 13, 21376 Salzhausen",t:"Privat",dk:1.5,dc:"nah",ep:65,dp:65,p:1,r:["EZ"],tg:["küche"],tel:"0171 121 80 78",w:"www.atelier07-14.de",no:"Fußläufig zum AZL; großes Zimmer; Kühlschrank; Bettwäsche inkl.; Endreinigung 25 €"},
+  {n:"Sabine Lauterbach",a:"Alte Dorfstr. 4, 21376 Salzhausen",t:"Privat",dk:1.0,dc:"nah",ep:40,dp:60,p:2,r:["EZ","DZ"],tg:["hund"],tel:"0174-2512664",w:"",no:"Reiterzimmer; Gemeinschaftsbad; Hund & Katze willkommen; Bettwäsche & Endreinigung inkl.; Nichtraucher"},
+  {n:"Steffen & Lara Reichert",a:"Am Brink 1, 21376 Salzhausen",t:"Privat",dk:1.2,dc:"nah",ep:45,dp:45,p:2,r:["EZ"],tg:["küche"],tel:"0171-5178383",w:"",no:"Ab 2 Nächten buchbar; Schlafsofa verfügbar; Küche nutzbar"},
+  {n:"Britta Stürken",a:"Lobker Weg 10, 21376 Salzhausen",t:"Privat",dk:1.5,dc:"nah",ep:60,dp:60,p:2,r:["EZ"],tg:["hund","küche"],tel:"0170-1790393",w:"",no:"2 Zimmer; Kitchenette; Nespresso; Hunde auf Anfrage; 200 m zum AZL; Endreinigung 20 €; auch über Airbnb"},
+  {n:"Familie Graue",a:"Mühlenweg 2+4, 21376 Salzhausen",t:"Privat",dk:0.5,dc:"nah",ep:40,dp:40,p:1,r:["EZ","MZ"],tg:[],tel:"0170-5884447",w:"zimmer-luhmühlen.de",no:"1 EZ + 3 Ferienwohnungen; ca. 2 min zum AZL"},
+  {n:"Bernhard Lauenstein",a:"Im Dreieck 12, 21376 Salzhausen",t:"Privat",dk:1.5,dc:"nah",ep:30,dp:30,p:2,r:["EZ","MZ"],tg:[],tel:"04172-961031",w:"",no:"30–60 € / 1 Pers.; 20 € / 2. Pers.; Endreinigung 20 €; Mindestbuchung nach Absprache"},
+  {n:"Ferienwohnung Heidschnucke",a:"Winsener Str. 15, 21376 Salzhausen",t:"Fewo",dk:1.5,dc:"nah",ep:55,dp:55,p:2,r:["MZ"],tg:["küche"],tel:"04172/909915",w:"salzhausen-ev.de",no:"Günstiger ab der 2. Nacht"},
+  {n:"Sigrid Sager",a:"Habichtweg 8, 21376 Salzhausen",t:"Privat",dk:1.5,dc:"nah",ep:80,dp:80,p:5,r:["MZ"],tg:["küche"],tel:"0151-12372064",w:"",no:"Ca. 60 m²; Küche; Mindestübernachtung; 80–90 €/Nacht"},
+  {n:"Ferienhaus Dat Huuske",a:"Igelweg 3, 21376 Oelstorf",t:"Fewo",dk:3,dc:"mittel",ep:95,dp:95,p:4,r:["MZ"],tg:["hund","küche"],tel:"0151-46500974",w:"",no:"Voll ausgestattet; Garten; Walk-In-Dusche; max. 4 Pers. (+15 € p.P.); Endreinigung 70 €; ab 1 Nacht"},
+  {n:"Familie Benecke",a:"Wetzer Weg 4, 21394 Westergellersen",t:"Privat",dk:7,dc:"mittel",ep:45,dp:45,p:4,r:["EZ","DZ"],tg:[],tel:"04135/809107",w:"",no:"1 EZ / 3 DZ mit Du/WC"},
+  {n:"Thieshof (Fam. Hedder)",a:"Lüneburger Str. 18, 21385 Amelinghausen",t:"Pension",dk:8,dc:"mittel",ep:35,dp:35,p:2,r:["EZ","DZ","MZ"],tg:[],tel:"04132/409",w:"www.thieshof.de",no:"1 EZ (55–62 €), 7 DZ (35–42,50 €/Pers.) + 1 Ferienwohnung"},
+  {n:"Landgasthaus Tödter",a:"Salzhausener Str. 11, 21385 Oldendorf",t:"Pension",dk:6,dc:"mittel",ep:43,dp:68,p:2,r:["EZ","DZ"],tg:["restaurant","frühstück"],tel:"04132/289",w:"www.landgasthaus-toedter.de",no:"Pauschalangebote; Familienzimmer verfügbar"},
+  {n:"Ferienpension Lindenhof",a:"Alte Dorfstr. 2, 21385 Oldendorf",t:"Fewo",dk:6,dc:"mittel",ep:60,dp:77,p:8,r:["EZ","DZ","MZ"],tg:["küche"],tel:"04132-380",w:"",no:"Typ 1: 4 Pers., Dusche/WC, Terrasse; Typ 2: 8 Pers., Wohnzimmer, Terrasse (+60 €); Strom nach Verbrauch"},
+  {n:"Buchenhof Nordheide",a:"Osterfeld 15, 21376 Gödenstorf",t:"Fewo",dk:4,dc:"mittel",ep:80,dp:95,p:2,r:["EZ","DZ","MZ"],tg:["pferd","küche"],tel:"0172-9060800",w:"www.buchenhof-nordheide.de",no:"EZ 80 €, DZ 95 €, Fewo ab 110 €; Pferdeboxen verfügbar"},
+  {n:"Eike Brit Harms",a:"Schusterberg 6, 21385 Oldendorf",t:"Fewo",dk:6,dc:"mittel",ep:72,dp:72,p:8,r:["MZ"],tg:["pferd","küche"],tel:"04132-9332727",w:"www.heidjer-ferien.de",no:"Direkt angrenzende Zusatzzimmer möglich; Pferdestall max. 4 Pferde; Endreinigung 60 €"},
+  {n:"Gasthof Isernhagen",a:"Hauptstr. 11, 21376 Gödenstorf",t:"Pension",dk:4,dc:"mittel",ep:49,dp:80,p:2,r:["EZ","DZ"],tg:["restaurant"],tel:"04172/8785",w:"",no:"4 EZ (49–65 €) / 6 DZ (80–95 €); Pauschalangebote"},
+  {n:"Eichhof Lübberstedt",a:"Hanstedter Landstr. 6, 21376 Garlstorf",t:"Fewo",dk:5,dc:"mittel",ep:65,dp:65,p:2,r:["MZ"],tg:["küche"],tel:"04172-7431",w:"",no:"Diverse Ferienwohnungen ab 65 €"},
+  {n:"Vossbur Gasthof",a:"Wulfsener Str. 4, 21442 Tangendorf",t:"Pension",dk:9,dc:"mittel",ep:63,dp:94,p:2,r:["EZ","DZ"],tg:["restaurant"],tel:"04173-513600",w:"www.vossbur.de",no:"20 Zimmer; Restaurant"},
+  {n:"Glockenhof Studtmann",a:"Soltauer Str. 2–6, 21385 Amelinghausen",t:"Hotel",dk:8,dc:"mittel",ep:95,dp:130,p:2,r:["EZ","DZ","MZ"],tg:["restaurant","sauna"],tel:"info@glockenhof-studtmann.de",w:"",no:"6 EZ (95 €) / 16 DZ (130 €) + 12 Appartements (155–185 €)"},
+  {n:"Gut Thansen",a:"Gut Thansen 2, 21388 Soderstorf",t:"Hotel",dk:10,dc:"mittel",ep:128,dp:185,p:2,r:["EZ","DZ"],tg:["restaurant","sauna","pferd"],tel:"04132/93330",w:"",no:"Restaurant; Hotelanlage; Preise nach Saison; DZ 185–295 €"},
+  {n:"FRAULINDER Ferien",a:"Zum Silberbusch 7, 21394 Westergellersen",t:"Fewo",dk:7,dc:"mittel",ep:89,dp:89,p:2,r:["DZ"],tg:["küche"],tel:"04135/8081037",w:"fraulindner.de",no:"Kingsize-Boxspringbett; Waipu TV; Bettwäsche inkl.; Nichtraucher; 1 Nacht 94 €, ab 2 Nächten 89 €"},
+  {n:"Johanna Putensen",a:"Bäckerstr. 5, 21394 Kirchgellersen",t:"Fewo",dk:8,dc:"mittel",ep:95,dp:95,p:3,r:["MZ"],tg:["küche"],tel:"0179-680 4779",w:"",no:"Ca. 50 m²; Küche; 2 Schlafzimmer (1,80×2,00 m); Wohnzimmer; Duschbad; Endreinigung 30 €"},
+  {n:"Ferienhaus Uns lütt Huus",a:"21385 Kirchgellersen",t:"Fewo",dk:8,dc:"mittel",ep:30,dp:30,p:3,r:["MZ"],tg:["küche","sauna"],tel:"04135-7504",w:"",no:"Gehobene Ausstattung; Garten mit Sauna; Geschirrspüler; Wäschepaket & Endreinigung inkl.; mind. 2 Pers."},
+  {n:"Yvonne Jennings",a:"Lübberstedter Hauptstr. 5, 21376 Gödenstorf",t:"Privat",dk:4,dc:"mittel",ep:35,dp:45,p:2,r:["EZ"],tg:["pferd"],tel:"04175-8021741",w:"",no:"Vollbad/WC; 35 € / 1 Pers., 45 € / 2 Pers.; Pferdeboxen im Nachbarort"},
+  {n:"Galerie Vierhöfen",a:"Alte Dorfstr. 4, 21444 Vierhöfen",t:"Pension",dk:12,dc:"weit",ep:28,dp:32,p:2,r:["EZ","DZ"],tg:[],tel:"04172/996896",w:"www.pension-galerie-vierhoefen.de",no:"Günstige Preise; Etagendusche/WC"},
+  {n:"Helga Schmidt",a:"Rehleinstr. 10, 21444 Vierhöfen",t:"Privat",dk:12,dc:"weit",ep:18,dp:18,p:2,r:["EZ","DZ"],tg:[],tel:"04172/414",w:"",no:"Sehr günstig; 18 €/Pers.; Etagendusche/WC"},
+  {n:"Tina Dassau",a:"Gut Schnee 6, 21444 Vierhöfen",t:"Privat",dk:12,dc:"weit",ep:50,dp:50,p:2,r:["EZ"],tg:["hund"],tel:"0171-8923132",w:"",no:"Großzügiges Zimmer; Doppelbett; Terrasse; Hunde willkommen; ab 2 Nächten; 50/70/90 € nach Belegung"},
+  {n:"Hotel Hof Sudermühlen",a:"Sudermühle 1, 21272 Egestorf",t:"Hotel",dk:14,dc:"weit",ep:85,dp:120,p:2,r:["EZ","DZ"],tg:["sauna","restaurant"],tel:"info@hotel-sudermuehlen.de",w:"",no:"Pauschalangebote; Sauna; Solarium"},
+  {n:"Hotel Acht Linden",a:"Alte Dorfstr. 1, 21272 Egestorf",t:"Hotel",dk:14,dc:"weit",ep:65,dp:99,p:2,r:["EZ","DZ"],tg:["restaurant","frühstück"],tel:"04175/84333",w:"www.hotel-acht-linden.de",no:"Du/WC in allen Zimmern"},
+  {n:"Ringhotel Sellhorn",a:"Winsener Str. 23, 21271 Hanstedt",t:"Hotel",dk:15,dc:"weit",ep:137,dp:137,p:2,r:["EZ","DZ"],tg:["restaurant","frühstück","sauna"],tel:"04184/8010",w:"www.hotel-sellhorn.de",no:"Alle Zimmer mit Bad/Du/WC; Preise inkl. Frühstück; 45 Zimmer"},
+  {n:"Holiday Inn Express Hamburg Süd",a:"Thaneberg 1, 21272 Egestorf",t:"Hotel",dk:14,dc:"weit",ep:79,dp:79,p:2,r:["EZ","DZ"],tg:[],tel:"04175-400670",w:"",no:"79 Zimmer; bitte Website für aktuelle Preise besuchen"},
+];
+
+let activeTag = "";
+
+const tgLabel = {hund:"🐾 Hunde",küche:"🍽️ Küche",frühstück:"🍳 Frühstück",pferd:"🐴 Pferdeboxen",sauna:"🧖 Sauna",restaurant:"🍴 Restaurant"};
+const rmLabel = {EZ:"Einzelzimmer",DZ:"Doppelzimmer",MZ:"Fewo / Mehrbett"};
+
+function distBadge(dc) {
+  const labels = {nah:"≤ 2 km",mittel:"3–10 km",weit:"> 10 km"};
+  return `<span class="dist-badge dist-${dc}">${labels[dc]||dc}</span>`;
+}
+
+function render() {
+  const t  = document.getElementById("fT").value;
+  const rm = document.getElementById("fR").value;
+  const p  = parseInt(document.getElementById("fP").value) || 0;
+  const pr = parseInt(document.getElementById("fPr").value) || 300;
+  const d  = document.getElementById("fD").value;
+  const dog= document.getElementById("fDog").value;
+  const s  = document.getElementById("fS").value;
+
+  let res = DATA.filter(x => {
+    if (t  && x.t !== t) return false;
+    if (rm && !x.r.includes(rm)) return false;
+    if (p > 0 && x.p < p) return false;
+    if (Math.min(x.ep||999, x.dp||999) > pr) return false;
+    if (d  && x.dc !== d) return false;
+    if (dog === "ja" && !x.tg.includes("hund")) return false;
+    if (activeTag && !x.tg.includes(activeTag)) return false;
+    return true;
+  });
+
+  if (s === "preis") res.sort((a,b) => Math.min(a.ep,a.dp) - Math.min(b.ep,b.dp));
+  else if (s === "dist") res.sort((a,b) => a.dk - b.dk);
+  else res.sort((a,b) => a.n.localeCompare(b.n, "de"));
+
+  document.getElementById("cnt").textContent = res.length;
+
+  const el = document.getElementById("cards");
+  if (!res.length) {
+    el.innerHTML = '<div class="empty">Keine Unterkünfte gefunden – bitte Filter anpassen.</div>';
+    return;
+  }
+
+  el.innerHTML = res.map(x => {
+    const mp = Math.min(x.ep||999, x.dp||999);
+    const facts = [
+      ...x.r.map(r => `<span class="fact">${rmLabel[r]||r}</span>`),
+      ...x.tg.map(g => `<span class="fact">${tgLabel[g]||g}</span>`)
+    ].join("");
+    const tel = x.tel ? `<span>📞 ${x.tel}</span>` : "";
+    const web = x.w ? `<a href="https://${x.w}" target="_blank" rel="noopener">🌐 ${x.w}</a>` : "";
+    return `<div class="card">
+  <div class="card-top">
+    <div class="card-name">${x.n}</div>
+    <span class="badge badge-${x.t}">${x.t}</span>
+  </div>
+  <div class="card-addr">📍 ${x.a} &nbsp;${distBadge(x.dc)} <span style="font-size:.75rem;color:#888">(ca. ${x.dk} km)</span></div>
+  <div class="card-facts">${facts}</div>
+  <div class="card-price">ab ${mp} € <span>/ Nacht</span></div>
+  ${x.no ? `<div class="card-notes">${x.no}</div>` : ""}
+  <div class="card-contact">${tel}${web}</div>
+</div>`;
+  }).join("");
+}
+
+document.getElementById("fPr").addEventListener("input", function() {
+  document.getElementById("prOut").textContent = "bis " + this.value + " €";
+  render();
+});
+["fT","fR","fP","fD","fDog","fS"].forEach(id =>
+  document.getElementById(id).addEventListener("change", render)
+);
+document.getElementById("tagRow").addEventListener("click", function(e) {
+  const tag = e.target.closest(".tag");
+  if (!tag) return;
+  document.querySelectorAll(".tag").forEach(t => t.classList.remove("on"));
+  tag.classList.add("on");
+  activeTag = tag.dataset.t;
+  render();
+});
+
+render();
+</script>
+</body>
+</html>
